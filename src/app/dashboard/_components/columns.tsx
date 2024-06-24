@@ -8,6 +8,7 @@ import { api } from "../../../../convex/_generated/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FileCardActions } from "./file-actions";
 
+// Ensure UserCell component is defined correctly
 function UserCell({ userId }: { userId: Id<"users"> }) {
   const userProfile = useQuery(api.users.getUserProfile, {
     userId: userId,
@@ -23,8 +24,9 @@ function UserCell({ userId }: { userId: Id<"users"> }) {
   );
 }
 
+// Update type definition to include isFavorited and url
 export const columns: ColumnDef<
-  Doc<"files"> & { url: string; isFavorited: boolean }
+  Doc<"files"> & { url: string | null; isFavorited: boolean }
 >[] = [
   {
     accessorKey: "name",
