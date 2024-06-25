@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Doc } from "../../../../convex/_generated/dataModel";
 import { Label } from "@/components/ui/label";
-
+import { AddFolderButton } from "./add-folder";
+import { FolderCard } from "./folder-card";
 function Placeholder() {
   return (
     <div className="flex flex-col gap-8 w-full items-center mt-24">
@@ -40,10 +41,12 @@ export function FileBrowser({
   title,
   favoritesOnly,
   deletedOnly,
+  foldersOnly,
 }: {
   title: string;
   favoritesOnly?: boolean;
   deletedOnly?: boolean;
+  foldersOnly?: boolean;
 }) {
   const organization = useOrganization();
   const user = useUser();
@@ -72,6 +75,10 @@ export function FileBrowser({
         }
       : "skip"
   );
+  const folders = useQuery(
+    api.folders.getFolders,
+    orgId ? { orgId } : "skip"
+  )
   const isLoading = files === undefined;
 
   const modifiedFiles =
@@ -88,8 +95,8 @@ export function FileBrowser({
         <h1 className="text-4xl font-bold">{title}</h1>
 
         <SearchBar query={query} setQuery={setQuery} />
-
         <UploadButton />
+        <AddFolderButton />
       </div>
 
       <Tabs defaultValue="grid">
@@ -134,9 +141,20 @@ export function FileBrowser({
 
         <TabsContent value="grid">
           <div className="grid grid-cols-3 gap-4">
-            {modifiedFiles?.map((file) => {
-              return <FileCard key={file._id} file={file} />;
-            })}
+            {
+              foldersOnly ? folders?.map((folder) => {
+                return <FolderCard key={folder._id} folder={folder} />
+              }) : 
+              <>
+                {folders?.map((folder) => {
+                return <FolderCard key={folder._id} folder={folder} />
+                })}
+                
+                {modifiedFiles?.map((file) => {
+                  return <FileCard key={file._id} file={file} />;
+                })}
+              </>
+            }
           </div>
         </TabsContent>
         <TabsContent value="table">

@@ -23,52 +23,68 @@ import {
 } from "@/components/ui/dialog";
 
 import { z } from "zod";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
-import { Doc } from "../../../../convex/_generated/dataModel";
 
 const formSchema = z.object({
-  title: z.string().min(1).max(200),
-  file: z
-    .custom<FileList>((val) => val instanceof FileList, "Required")
-    .refine((files) => files.length > 0, `Required`),
+  name: z.string().min(1).max(200),
 });
 
-export function AddFolder() {
+export function AddFolderButton() {
   const { toast } = useToast();
   const organization = useOrganization();
   const user = useUser();
+  const createFolder = useMutation(api.folders.createFolder);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      file: undefined,
+      name: "",
     },
   });
 
-  const fileRef = form.register("file");
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    let orgId: string | undefined = undefined;
+    if (organization.isLoaded && user.isLoaded) {
+      orgId = organization.organization?.id ?? user.user?.id;
+    }
+    if (!orgId) return;
 
+    try {
+      await createFolder({
+        name: values.name,
+        orgId,
+        parentId: undefined,
+      });
+
+      form.reset();
+
+      setIsDialogOpen(false);
+
+      toast({
+        variant: "success",
+        title: "Folder Created",
+        description: "Your new folder has been created successfully",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: "Your folder could not be created, try again later",
+      });
+    }
   }
 
-  let orgId: string | undefined = undefined;
-  if (organization.isLoaded && user.isLoaded) {
-    orgId = organization.organization?.id ?? user.user?.id;
-  }
-
-  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <Dialog
-      open={isFileDialogOpen}
+      open={isDialogOpen}
       onOpenChange={(isOpen) => {
-        setIsFileDialogOpen(isOpen);
+        setIsDialogOpen(isOpen);
         form.reset();
       }}
     >
@@ -77,7 +93,7 @@ export function AddFolder() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="mb-8">Make a Folder Here</DialogTitle>
+          <DialogTitle className="mb-8">Create a New Folder</DialogTitle>
           <DialogDescription>
             This folder will be accessible by anyone in your organization
           </DialogDescription>
@@ -88,26 +104,12 @@ export function AddFolder() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField
                 control={form.control}
-                name="title"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Folder Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="file"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>File</FormLabel>
-                    <FormControl>
-                      <Input type="file" {...fileRef} />
+                      <Input {...field} placeholder="Enter folder name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -160,7 +160,7 @@ function assertCanDeleteFile(user: Doc<"users">, file: Doc<"files">) {
     user.orgIds.find((org) => org.orgId === file.orgId)?.role === "admin";
 
   if (!canDelete) {
-    throw new ConvexError("you have no acces to delete this file");
+    throw new ConvexError("you have no access to delete this file");
   }
 }
 

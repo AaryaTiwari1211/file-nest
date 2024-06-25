@@ -32,7 +32,7 @@ export function FileCard({
   } as Record<Doc<"files">["type"], ReactNode>;
 
   return (
-    <Card className="">
+    <Card className="max-w-[400px]">
       <CardHeader className="relative">
         <CardTitle className="flex gap-2 text-base font-normal">
           <div className="flex justify-center">{typeIcons[file.type]}</div>{" "}
@@ -44,13 +44,13 @@ export function FileCard({
       </CardHeader>
       <CardContent className="h-[200px] flex justify-center items-center">
         {file.type === "image" && file.url && (
-          <Image alt={file.name} width="150" height="100" src={file.url} />
+          <Image alt={file.name} width="300" height="100" src={file.url} />
         )}
 
         {file.type === "csv" && <GanttChartIcon className="w-20 h-20" />}
         {file.type === "pdf" && <FileTextIcon className="w-20 h-20" />}
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between xl:flex-nowrap xl:gap-0 lg:flex-wrap sm:gap-3 sm:flex-wrap">
         <div className="flex gap-2 text-xs text-gray-700 w-40 items-center">
           <Avatar className="w-6 h-6">
             <AvatarImage src={userProfile?.image} />

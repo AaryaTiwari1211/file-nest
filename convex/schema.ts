@@ -41,9 +41,11 @@ export default defineSchema({
   }).index("by_tokenIdentifier", ["tokenIdentifier"]),
 
   folders: defineTable({
+    userId: v.id("users"),
     name: v.string(),
     orgId: v.string(),
     parentId: v.optional(v.id("folders")),
-    files: v.array(v.id("files")),
-  }).index("by_orgId", ["orgId"]),
+    files: v.array(v.id("_storage")),
+  }).index("by_userId_orgId", ["userId", "orgId"])
+  .index("by_orgId", ["orgId"])
 });
