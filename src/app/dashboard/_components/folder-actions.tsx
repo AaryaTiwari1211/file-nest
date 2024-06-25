@@ -101,6 +101,7 @@ export function FolderActions({ folderId }: { folderId: Id<"folders"> }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
       <DropdownMenu>
         <DropdownMenuTrigger>
           <MoreVertical />
