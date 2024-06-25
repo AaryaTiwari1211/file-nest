@@ -14,14 +14,21 @@ import { ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { FolderActions } from "./folder-actions";
+import { useRouter } from "next/navigation";
 
 export const FolderCard = ({ folder }: { folder: Doc<"folders"> }) => {
+  const router = useRouter();
+
+  const handleFolderClick = (folderName : string) => {
+    router.push(`/dashboard/folders/${folderName}`);
+  };
+
   const userProfile = useQuery(api.users.getUserProfile, {
     userId: folder.userId,
   });
 
   return (
-    <Card className="max-w-[400px]">
+    <Card className="max-w-[400px]" onClick={() => handleFolderClick(folder.name)}>
       <CardHeader className="relative">
         <CardTitle className="flex gap-2 text-base font-normal">
           <div className="flex justify-center">

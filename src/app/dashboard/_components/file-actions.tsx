@@ -77,7 +77,7 @@ export function FileCardActions({
       </AlertDialog>
 
       <DropdownMenu>
-        <DropdownMenuTrigger>
+        <DropdownMenuTrigger> 
           <MoreVertical />
         </DropdownMenuTrigger>
         <DropdownMenuContent>

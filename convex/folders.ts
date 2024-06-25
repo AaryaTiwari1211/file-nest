@@ -78,7 +78,7 @@ export const deleteFolder = mutation({
 export const uploadFileinFolder = mutation({
   args: {
     folderId: v.id("folders"),
-    fileId: v.id("_storage"),
+    fileId: v.id("files"),
   },
   async handler(ctx, args) {
     const folder = await ctx.db.get(args.folderId);
@@ -116,8 +116,23 @@ export const getFolder = query({
     }
     return folder;
   }
-})
+});
 
+export const getFolderByName = query({
+  args: {
+    folderName: v.string(),
+  },
+  async handler(ctx, args) {
+    const folder = await ctx.db
+      .query("folders")
+      .withIndex("by_name", (q) => q.eq("name", args.folderName))
+      .first();
+    if (!folder) {
+      throw new Error("Folder not found");
+    }
+    return folder;
+  },
+});
 
 
 

@@ -109,6 +109,7 @@ export function FolderActions({ folderId }: { folderId: Id<"folders"> }) {
         <DropdownMenuContent>
           <DropdownMenuItem
             onClick={async () => {
+              setIsConfirmOpen(true);
               await addFolder({
                 folderId: folderId,
                 parentId: folderId,
@@ -118,16 +119,14 @@ export function FolderActions({ folderId }: { folderId: Id<"folders"> }) {
                 title: "Folder added",
                 description: "Your folder has been added",
               });
+              setIsConfirmOpen(false);
             }}
           >
             Add Folder
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={async () => {
-              //   await uploadFile({
-              //     folderId: folderId,
-              //     fileId: "fileId",
-              //   });
+
               toast({
                 variant: "default",
                 title: "File uploaded",
@@ -136,14 +135,6 @@ export function FolderActions({ folderId }: { folderId: Id<"folders"> }) {
             }}
           >
             Upload File
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              setIsConfirmOpen(true);
-            }}
-          >
-            <TrashIcon /> Delete Folder
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

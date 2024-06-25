@@ -21,10 +21,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/layout.js"
     ],
-    "/dashboard/folders/page": [
+    "/dashboard/folders/[folderName]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/folders/page.js"
+      "static/chunks/app/dashboard/folders/[folderName]/page.js"
     ]
   }
 }

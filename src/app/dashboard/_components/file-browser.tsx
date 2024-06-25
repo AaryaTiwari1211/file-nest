@@ -140,7 +140,7 @@ export function FileBrowser({
         )}
 
         <TabsContent value="grid">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-1">
             {
               foldersOnly ? folders?.map((folder) => {
                 return <FolderCard key={folder._id} folder={folder} />

@@ -267,3 +267,11 @@ async function hasAccessToFile(
 
   return { user: hasAccess.user, file };
 }
+
+export const getFileById = query({
+  args: { fileId: v.id("files") },
+  async handler(ctx, args) {
+    const file = await ctx.db.get(args.fileId);
+    return file;
+  },
+})
