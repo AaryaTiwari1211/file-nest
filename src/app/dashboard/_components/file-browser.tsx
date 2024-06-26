@@ -22,7 +22,8 @@ import { Doc } from "../../../../convex/_generated/dataModel";
 import { Label } from "@/components/ui/label";
 import { AddFolderButton } from "./add-folder";
 import { FolderCard } from "./folder-card";
-function Placeholder() {
+
+export function Placeholder() {
   return (
     <div className="flex flex-col gap-8 w-full items-center mt-24">
       <Image

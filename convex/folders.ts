@@ -1,3 +1,4 @@
+import { useMutation } from 'convex/react';
 import { ConvexError, v } from "convex/values";
 import {
   MutationCtx,
@@ -8,12 +9,14 @@ import {
 import { hasAccessToOrg } from "./files";
 import { Id } from "./_generated/dataModel";
 import exp from "constants";
+import { Doc } from './_generated/dataModel';
 
 export const createFolder = mutation({
   args: {
     name: v.string(),
     orgId: v.string(),
     parentId: v.optional(v.id("folders")),
+    
   },
   async handler(ctx, args) {
     const user = await hasAccessToOrg(ctx, args.orgId);
@@ -75,20 +78,22 @@ export const deleteFolder = mutation({
   },
 });
 
-export const uploadFileinFolder = mutation({
+export const uploadFileInFolder = mutation({
   args: {
-    folderId: v.id("folders"),
-    fileId: v.id("files"),
+    folderId: v.id('folders'),
+    fileId: v.id('_storage'),
   },
   async handler(ctx, args) {
     const folder = await ctx.db.get(args.folderId);
     if (!folder) {
-      throw new ConvexError("Folder not found");
+      throw new ConvexError('Folder not found');
     }
-    folder.files.push(args.fileId);
-    await ctx.db.patch(args.folderId, folder);
-  }
-})
+
+    await ctx.db.patch(args.folderId, {
+      files: [...folder.files, args.fileId],
+    });
+  },
+});
 
 export const addFolderinFolder = mutation({
   args: {
@@ -128,9 +133,27 @@ export const getFolderByName = query({
       .withIndex("by_name", (q) => q.eq("name", args.folderName))
       .first();
     if (!folder) {
-      throw new Error("Folder not found");
+      return undefined;
     }
     return folder;
+  },
+});
+
+export const getFilesByIds = query({
+  args: {
+    fileIds: v.array(v.id('_storage')),
+  },
+  async handler(ctx, args) {
+    const files = [];
+    for (const fileId of args.fileIds) {
+      const file = await ctx.db.query("files")
+      .withIndex("by_fileId" ,(q) => q.eq("fileId", fileId))
+      .first()
+      if (file) {
+        files.push(file);
+      }
+    }
+    return files;
   },
 });
 

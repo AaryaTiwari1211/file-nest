@@ -57,6 +57,7 @@ export const createFile = mutation({
     fileId: v.id("_storage"),
     orgId: v.string(),
     type: fileTypes,
+    folderId: v.optional(v.id("folders")),
   },
   async handler(ctx, args) {
     const hasAccess = await hasAccessToOrg(ctx, args.orgId);
@@ -269,9 +270,11 @@ async function hasAccessToFile(
 }
 
 export const getFileById = query({
-  args: { fileId: v.id("files") },
+  args: { fileId: v.id("_storage") },
   async handler(ctx, args) {
-    const file = await ctx.db.get(args.fileId);
+    const file = await ctx.db.query("files")
+      .withIndex("by_fileId", (q) => q.eq("fileId", args.fileId))
+      .first();
     return file;
   },
 })

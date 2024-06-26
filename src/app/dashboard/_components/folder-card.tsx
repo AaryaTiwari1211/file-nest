@@ -13,7 +13,6 @@ import { Folder } from "lucide-react";
 import { ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { FolderActions } from "./folder-actions";
 import { useRouter } from "next/navigation";
 
 export const FolderCard = ({ folder }: { folder: Doc<"folders"> }) => {
@@ -36,9 +35,6 @@ export const FolderCard = ({ folder }: { folder: Doc<"folders"> }) => {
           </div>{" "}
           {folder.name}
         </CardTitle>
-        <div className="absolute top-2 right-2">
-          <FolderActions folderId={folder._id} />
-        </div>
       </CardHeader>
       <CardContent className="h-[200px] flex justify-center items-center">
         <Folder className="w-20 h-20" />

@@ -21,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useQuery } from "convex/react";
 
 import { z } from "zod";
 
@@ -30,6 +31,8 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { Doc } from "../../../../convex/_generated/dataModel";
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const formSchema = z.object({
   title: z.string().min(1).max(200),
@@ -39,6 +42,12 @@ const formSchema = z.object({
 });
 
 export function UploadButton() {
+  const path = usePathname();
+  const folderName = path.replace("/dashboard/folders/", "");
+  const uploadFileInFolder = useMutation(api.folders.uploadFileInFolder)
+  const folder = useQuery(api.folders.getFolderByName, {
+    folderName: folderName as string,
+  });
   const { toast } = useToast();
   const organization = useOrganization();
   const user = useUser();
@@ -80,8 +89,16 @@ export function UploadButton() {
         fileId: storageId,
         orgId,
         type: types[fileType],
+        folderId : folder ? folder._id : undefined
       });
 
+      if(folder)
+      {
+        await uploadFileInFolder({
+          fileId: storageId,
+          folderId: folder._id,
+        });
+      }
       form.reset();
 
       setIsFileDialogOpen(false);

@@ -15,12 +15,13 @@ export default defineSchema({
     type: fileTypes,
     orgId: v.string(),
     fileId: v.id("_storage"),
-    folderId: v.optional(v.id("files")),
+    folderId: v.optional(v.id("folders")),
     userId: v.id("users"),
     shouldDelete: v.optional(v.boolean()),
   })
     .index("by_orgId", ["orgId"])
-    .index("by_shouldDelete", ["shouldDelete"]),
+    .index("by_shouldDelete", ["shouldDelete"])
+    .index("by_fileId", ["fileId"]),
 
   favorites: defineTable({
     fileId: v.id("files"),
@@ -45,7 +46,7 @@ export default defineSchema({
     name: v.string(),
     orgId: v.string(),
     parentId: v.optional(v.id("folders")),
-    files: v.array(v.id("files")),
+    files: v.array(v.id("_storage")),
   }).index("by_userId_orgId", ["userId", "orgId"])
   .index("by_orgId", ["orgId"])
   .index("by_name", ["name"]),
