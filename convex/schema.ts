@@ -47,8 +47,11 @@ export default defineSchema({
     orgId: v.string(),
     parentId: v.optional(v.id("folders")),
     files: v.array(v.id("_storage")),
+    folders: v.array(v.id("folders")),
+    shouldDelete: v.optional(v.boolean()),
   })
     .index("by_userId_orgId", ["userId", "orgId"])
     .index("by_orgId", ["orgId"])
     .index("by_name", ["name"])
+    .index("by_shouldDelete", ["shouldDelete"]),
 });

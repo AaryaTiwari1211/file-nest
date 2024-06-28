@@ -1,22 +1,16 @@
-import { useMutation } from 'convex/react';
+import { useMutation } from "convex/react";
 import { ConvexError, v } from "convex/values";
-import {
-  MutationCtx,
-  QueryCtx,
-  mutation,
-  query,
-} from "./_generated/server";
+import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
 import { hasAccessToOrg } from "./files";
 import { Id } from "./_generated/dataModel";
 import exp from "constants";
-import { Doc } from './_generated/dataModel';
+import { Doc } from "./_generated/dataModel";
 
 export const createFolder = mutation({
   args: {
     name: v.string(),
     orgId: v.string(),
     parentId: v.optional(v.id("folders")),
-    
   },
   async handler(ctx, args) {
     const user = await hasAccessToOrg(ctx, args.orgId);
@@ -29,8 +23,9 @@ export const createFolder = mutation({
       orgId: args.orgId,
       parentId: args.parentId,
       files: [],
-    })
-  }
+      folders: [],
+    });
+  },
 });
 
 export const getFolders = query({
@@ -61,7 +56,7 @@ export const getFolders = query({
       folders = folders.filter((folder) => folder.parentId === args.parentId);
     }
 
-    if(folders && folders.length === 0) {
+    if (folders && folders.length === 0) {
       return [];
     }
 
@@ -74,7 +69,7 @@ export const deleteFolder = mutation({
     folderId: v.id("folders"),
   },
   async handler(ctx, args) {
-    const folder = await ctx.db.get(args.folderId)
+    const folder = await ctx.db.get(args.folderId);
     if (!folder) {
       throw new ConvexError("Folder not found");
     }
@@ -82,27 +77,71 @@ export const deleteFolder = mutation({
   },
 });
 
-export const uploadFileInFolder = mutation({
+export const deleteAllFolders = mutation({
   args: {
-    folderId: v.id('folders'),
-    fileId: v.id('_storage'),
+    orgId: v.string(),
+  },
+  async handler(ctx, args) {
+    const folders = await ctx.db
+      .query("folders")
+      .withIndex("by_shouldDelete", (q) => q.eq("shouldDelete", true))
+      .collect();
+    for (const folder of folders) {
+      await Promise.all(
+        folder.files.map(async (file) => {
+          const file1 = await ctx.db
+            .query("files")
+            .withIndex("by_fileId", (q) => q.eq("fileId", file))
+            .first();
+          if (file1) {
+            await ctx.storage.delete(file);
+            await ctx.db.delete(file1._id);
+          }
+        })
+      );
+      return await ctx.db.delete(folder._id);
+    }
+  },
+});
+
+export const restoreFolder = mutation({
+  args: {
+    folderId: v.id("folders"),
   },
   async handler(ctx, args) {
     const folder = await ctx.db.get(args.folderId);
     if (!folder) {
-      throw new ConvexError('Folder not found');
+      throw new ConvexError("Folder not found");
+    }
+    folder.shouldDelete = false;
+    await ctx.db.patch(args.folderId, folder);
+  },
+})
+
+export const uploadFileInFolder = mutation({
+  args: {
+    folderId: v.id("folders"),
+    fileId: v.id("_storage"),
+  },
+  async handler(ctx, args) {
+    const folder = await ctx.db.get(args.folderId);
+    if (!folder) {
+      throw new ConvexError("Folder not found");
     }
 
-    const file = await ctx.db.query('files').withIndex('by_fileId', (q) => q.eq('fileId', args.fileId)).first();
+    const file = await ctx.db
+      .query("files")
+      .withIndex("by_fileId", (q) => q.eq("fileId", args.fileId))
+      .first();
 
     await ctx.db.patch(args.folderId, {
       files: [...folder.files, args.fileId],
     });
-    
-    if(file) {
+
+    if (file) {
       await ctx.db.patch(file._id, {
         folderId: args.folderId,
-      })
+      });
     }
   },
 });
@@ -119,8 +158,8 @@ export const addFolderinFolder = mutation({
     }
     folder.parentId = args.parentId;
     await ctx.db.patch(args.folderId, folder);
-  }
-})
+  },
+});
 
 export const getFolder = query({
   args: {
@@ -132,7 +171,7 @@ export const getFolder = query({
       throw new ConvexError("Folder not found");
     }
     return folder;
-  }
+  },
 });
 
 export const getFolderByName = query({
@@ -153,14 +192,15 @@ export const getFolderByName = query({
 
 export const getFilesByIds = query({
   args: {
-    fileIds: v.array(v.id('_storage')),
+    fileIds: v.array(v.id("_storage")),
   },
   async handler(ctx, args) {
     const files = [];
     for (const fileId of args.fileIds) {
-      const file = await ctx.db.query("files")
-      .withIndex("by_fileId" ,(q) => q.eq("fileId", fileId))
-      .first()
+      const file = await ctx.db
+        .query("files")
+        .withIndex("by_fileId", (q) => q.eq("fileId", fileId))
+        .first();
       if (file) {
         files.push(file);
       }
@@ -168,8 +208,6 @@ export const getFilesByIds = query({
     return files;
   },
 });
-
-
 
 // export const uploadFileInFolder = mutation({
 //   args: {
