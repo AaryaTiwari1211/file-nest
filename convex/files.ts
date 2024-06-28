@@ -26,7 +26,7 @@ export async function hasAccessToOrg(
   const identity = await ctx.auth.getUserIdentity();
 
   if (!identity) {
-    return null;
+    throw new ConvexError("you must be logged in to access this org");  
   }
 
   const user = await ctx.db

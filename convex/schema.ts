@@ -28,7 +28,7 @@ export default defineSchema({
     orgId: v.string(),
     userId: v.id("users"),
   }).index("by_userId_orgId_fileId", ["userId", "orgId", "fileId"]),
-  
+
   users: defineTable({
     tokenIdentifier: v.string(),
     name: v.optional(v.string()),
@@ -47,7 +47,8 @@ export default defineSchema({
     orgId: v.string(),
     parentId: v.optional(v.id("folders")),
     files: v.array(v.id("_storage")),
-  }).index("by_userId_orgId", ["userId", "orgId"])
-  .index("by_orgId", ["orgId"])
-  .index("by_name", ["name"]),
+  })
+    .index("by_userId_orgId", ["userId", "orgId"])
+    .index("by_orgId", ["orgId"])
+    .index("by_name", ["name"])
 });

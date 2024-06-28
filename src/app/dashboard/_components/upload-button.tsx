@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import {
   Dialog,
@@ -21,17 +21,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useQuery } from "convex/react";
 
 import { z } from "zod";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { Doc } from "../../../../convex/_generated/dataModel";
-import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 
 const formSchema = z.object({
@@ -44,10 +42,19 @@ const formSchema = z.object({
 export function UploadButton() {
   const path = usePathname();
   const folderName = path.replace("/dashboard/folders/", "");
-  const uploadFileInFolder = useMutation(api.folders.uploadFileInFolder)
+  const uploadFileInFolder = useMutation(api.folders.uploadFileInFolder);
   const folder = useQuery(api.folders.getFolderByName, {
     folderName: folderName as string,
   });
+  const [folderData, setFolderData] = useState<Doc<"folders"> | null>(null);
+
+  useEffect(() => {
+    if (folder !== undefined) {
+      setFolderData(folder);
+      console.log("Folder data:", folder);
+    }
+  }, [folder]);
+
   const { toast } = useToast();
   const organization = useOrganization();
   const user = useUser();
@@ -64,6 +71,10 @@ export function UploadButton() {
   const fileRef = form.register("file");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    let orgId: string | undefined = undefined;
+    if (organization.isLoaded && user.isLoaded) {
+      orgId = organization.organization?.id ?? user.user?.id;
+    }
     if (!orgId) return;
 
     const postUrl = await generateUploadUrl();
@@ -89,15 +100,15 @@ export function UploadButton() {
         fileId: storageId,
         orgId,
         type: types[fileType],
-        folderId : folder ? folder._id : undefined
+        folderId: folderData?._id,
       });
 
-      if(folder)
-      {
+      if (folderData) {
         await uploadFileInFolder({
           fileId: storageId,
-          folderId: folder._id,
+          folderId: folderData._id,
         });
+        console.log("File uploaded in folder");
       }
       form.reset();
 
@@ -115,11 +126,6 @@ export function UploadButton() {
         description: "Your file could not be uploaded, try again later",
       });
     }
-  }
-
-  let orgId: string | undefined = undefined;
-  if (organization.isLoaded && user.isLoaded) {
-    orgId = organization.organization?.id ?? user.user?.id;
   }
 
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
@@ -146,47 +152,51 @@ export function UploadButton() {
         </DialogHeader>
 
         <div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {folder === undefined ? (
+            <div>Loading...</div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="file"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>File</FormLabel>
-                    <FormControl>
-                      <Input type="file" {...fileRef} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                className="flex gap-1"
-              >
-                {form.formState.isSubmitting && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
-                Submit
-              </Button>
-            </form>
-          </Form>
+                <FormField
+                  control={form.control}
+                  name="file"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>File</FormLabel>
+                      <FormControl>
+                        <Input type="file" {...fileRef} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  className="flex gap-1"
+                >
+                  {form.formState.isSubmitting && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                  Submit
+                </Button>
+              </form>
+            </Form>
+          )}
         </div>
       </DialogContent>
     </Dialog>

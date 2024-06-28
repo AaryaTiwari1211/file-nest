@@ -61,6 +61,10 @@ export const getFolders = query({
       folders = folders.filter((folder) => folder.parentId === args.parentId);
     }
 
+    if(folders && folders.length === 0) {
+      return [];
+    }
+
     return folders;
   },
 });
@@ -89,9 +93,17 @@ export const uploadFileInFolder = mutation({
       throw new ConvexError('Folder not found');
     }
 
+    const file = await ctx.db.query('files').withIndex('by_fileId', (q) => q.eq('fileId', args.fileId)).first();
+
     await ctx.db.patch(args.folderId, {
       files: [...folder.files, args.fileId],
     });
+    
+    if(file) {
+      await ctx.db.patch(file._id, {
+        folderId: args.folderId,
+      })
+    }
   },
 });
 

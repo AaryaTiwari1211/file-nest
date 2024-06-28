@@ -11,8 +11,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="min-h-screen">
-      <div className="flex gap-8 h-screen">
+    <main className="h-screen">
+      <div className="flex gap-8 h-screen ">
         <SideNav />
         <div className="w-full m-6">{children}</div>
       </div>

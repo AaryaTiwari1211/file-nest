@@ -76,19 +76,23 @@ export function FileBrowser({
         }
       : "skip"
   );
-  const folders = useQuery(
-    api.folders.getFolders,
-    orgId ? { orgId } : "skip"
-  )
+  const folders = useQuery(api.folders.getFolders, orgId ? { orgId } : "skip");
+
+  if (folders) {
+    console.log(folders);
+  }
+
   const isLoading = files === undefined;
 
   const modifiedFiles =
-    files?.map((file) => ({
-      ...file,
-      isFavorited: (favorites ?? []).some(
-        (favorite) => favorite.fileId === file._id
-      ),
-    })) ?? [];
+    files
+      ?.filter((file) => file.folderId === undefined)
+      .map((file) => ({
+        ...file,
+        isFavorited: (favorites ?? []).some(
+          (favorite) => favorite.fileId === file._id
+        ),
+      })) ?? [];
 
   return (
     <div>
@@ -96,8 +100,10 @@ export function FileBrowser({
         <h1 className="text-4xl font-bold">{title}</h1>
 
         <SearchBar query={query} setQuery={setQuery} />
-        <UploadButton />
-        <AddFolderButton />
+        <div className="flex gap-3">
+          <UploadButton />
+          <AddFolderButton />
+        </div>
       </div>
 
       <Tabs defaultValue="grid">
@@ -142,20 +148,21 @@ export function FileBrowser({
 
         <TabsContent value="grid">
           <div className="grid grid-cols-4 gap-1">
-            {
-              foldersOnly ? folders?.map((folder) => {
-                return <FolderCard key={folder._id} folder={folder} />
-              }) : 
+            {foldersOnly ? (
+              folders?.map((folder) => {
+                return <FolderCard key={folder._id} folder={folder} />;
+              })
+            ) : (
               <>
                 {folders?.map((folder) => {
-                return <FolderCard key={folder._id} folder={folder} />
+                  return <FolderCard key={folder._id} folder={folder} />;
                 })}
-                
+
                 {modifiedFiles?.map((file) => {
                   return <FileCard key={file._id} file={file} />;
                 })}
               </>
-            }
+            )}
           </div>
         </TabsContent>
         <TabsContent value="table">
@@ -163,7 +170,7 @@ export function FileBrowser({
         </TabsContent>
       </Tabs>
 
-      {files?.length === 0 && <Placeholder />}
+      {files?.length === 0 && folders?.length === 0 && <Placeholder />}
     </div>
   );
 }
