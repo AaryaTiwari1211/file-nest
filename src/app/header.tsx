@@ -18,7 +18,7 @@ export function Header() {
       <div className="items-center flex mx-10 justify-between">
         <Link href="/" className="flex gap-2 items-center text-xl text-black">
           <Image src="/logo.png" width="50" height="50" alt="file drive logo" />
-          FileDrive
+          File Nest
         </Link>
 
         <div className="flex gap-2">
