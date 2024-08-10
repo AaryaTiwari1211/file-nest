@@ -11,6 +11,7 @@ import { Doc, Id } from "./_generated/dataModel";
 
 export const generateUploadUrl = mutation(async (ctx) => {
   const identity = await ctx.auth.getUserIdentity();
+  console.log(identity);
   
   if (!identity) {
     throw new ConvexError("you must be logged in to upload a file");

@@ -6,16 +6,16 @@ export function Footer() {
       <div className="container mx-auto flex justify-between items-center">
         <div>FileNest</div>
 
-        <Link className="text-blue-900 hover:text-blue-500" href="/privacy">
+        <Link className="text-blue-900 hover:text-blue-500" href="#">
           Privacy Policy
         </Link>
         <Link
           className="text-blue-900 hover:text-blue-500"
-          href="/terms-of-service"
+          href="#"
         >
           Terms of Service
         </Link>
-        <Link className="text-blue-900 hover:text-blue-500" href="/about">
+        <Link className="text-blue-900 hover:text-blue-500" href="#">
           About
         </Link>
       </div>

@@ -1,3 +1,4 @@
+"use client";
 import { SignUp } from "@clerk/nextjs";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -18,7 +19,7 @@ export default function SignUpPage() {
         <SignUp
           routing="path"
           path="/sign-up"
-          redirectUrl="/"
+          redirectUrl="/dashboard/files"
           signInUrl="/sign-in"
         />
         <div>

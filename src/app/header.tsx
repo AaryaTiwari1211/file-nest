@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import {
   OrganizationSwitcher,
   SignInButton,
+  SignOutButton,
   SignedIn,
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import {useRouter} from "next/navigation"
+import { useRouter } from "next/navigation";
 
 export function Header() {
   const router = useRouter();
@@ -21,13 +22,19 @@ export function Header() {
           File Nest
         </Link>
 
-        <div className="flex gap-2">
+        <div className="flex gap-10 items-center">
           <OrganizationSwitcher />
-          <UserButton />
           <SignedOut>
-            <Button onClick={()=>router.push("/sign-in")}>Sign In</Button>
-            <Button onClick={()=>router.push("/sign-up")}>Sign Up</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => router.push("/sign-in")}>Sign In</Button>
+              <Button onClick={() => router.push("/sign-up")}>Sign Up</Button>
+            </div>
           </SignedOut>
+          <SignedIn>
+            <SignOutButton>
+              <Button onClick={()=>router.push("/")}>Sign Out</Button>
+            </SignOutButton>
+          </SignedIn>
         </div>
       </div>
     </div>

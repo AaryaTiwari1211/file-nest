@@ -1,8 +1,9 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
-
+import { useUser } from "@clerk/nextjs";
 export default function LandingPage() {
-
+  const user = useUser();
   return (
     <div className="bg-white">
       <div className="relative isolate px-6 pt-14 lg:px-8">
@@ -37,7 +38,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
-                href="/sign-in"
+                href={user.user ? "/dashboard/files" : "/sign-in"}
                 className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
                 Get started
