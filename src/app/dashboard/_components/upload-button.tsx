@@ -71,11 +71,6 @@ export function UploadButton() {
   const fileRef = form.register("file");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    let orgId: string | undefined = undefined;
-    if (organization.isLoaded && user.isLoaded) {
-      orgId = organization.organization?.id ?? user.user?.id;
-    }
-    if (!orgId) return;
 
     const postUrl = await generateUploadUrl();
 
@@ -98,7 +93,6 @@ export function UploadButton() {
       await createFile({
         name: values.title,
         fileId: storageId,
-        orgId,
         type: types[fileType],
         folderId: folderData?._id,
       });

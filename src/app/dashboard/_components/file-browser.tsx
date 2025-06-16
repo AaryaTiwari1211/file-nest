@@ -1,5 +1,5 @@
 "use client";
-import { useOrganization, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { UploadButton } from "./upload-button";
@@ -7,7 +7,7 @@ import { FileCard } from "./file-card";
 import Image from "next/image";
 import { GridIcon, Loader2, RowsIcon } from "lucide-react";
 import { SearchBar } from "./search-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DataTable } from "./file-table";
 import { columns } from "./columns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +22,7 @@ import { Doc } from "../../../../convex/_generated/dataModel";
 import { Label } from "@/components/ui/label";
 import { AddFolderButton } from "./add-folder";
 import { FolderCard } from "./folder-card";
+import { ConvexError } from "convex/values";
 
 export function Placeholder() {
   return (
@@ -49,26 +50,27 @@ export function FileBrowser({
   deletedOnly?: boolean;
   foldersOnly?: boolean;
 }) {
-  const organization = useOrganization();
   const user = useUser();
+  useEffect(() => {
+    console.log("User:", user);
+  },[])
   const [query, setQuery] = useState("");
   const [type, setType] = useState<Doc<"files">["type"] | "all">("all");
 
-  let orgId: string | undefined = undefined;
-  if (organization.isLoaded && user.isLoaded) {
-    orgId = organization.organization?.id ?? user.user?.id;
+  if (!user) {
+    throw new ConvexError("User not found");
   }
+
+  const userId = user.user?.id;
 
   const favorites = useQuery(
     api.files.getAllFavorites,
-    orgId ? { orgId } : "skip"
   );
 
   const files = useQuery(
     api.files.getFiles,
-    orgId
+    userId
       ? {
-          orgId,
           type: type === "all" ? undefined : type,
           query,
           favorites: favoritesOnly,
@@ -76,17 +78,16 @@ export function FileBrowser({
         }
       : "skip"
   );
-  const folders = useQuery(api.folders.getFolders, orgId ? { orgId } : "skip");
-
-  if (folders) {
-    console.log(folders);
-  }
+  const folders = useQuery(
+    api.folders.getFolders,
+    userId ? { query, parentId: undefined } : "skip"
+  );
 
   const isLoading = files === undefined;
 
   const modifiedFiles =
     files
-      ?.filter((file) => file.folderId === undefined)
+      ?.filter((file) => file.folderId === undefined && file.userId !== "skip")
       .map((file) => ({
         ...file,
         isFavorited: (favorites ?? []).some(

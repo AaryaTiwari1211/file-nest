@@ -13,45 +13,35 @@ export default defineSchema({
   files: defineTable({
     name: v.string(),
     type: fileTypes,
-    orgId: v.string(),
     fileId: v.id("_storage"),
     folderId: v.optional(v.id("folders")),
     userId: v.id("users"),
     shouldDelete: v.optional(v.boolean()),
   })
-    .index("by_orgId", ["orgId"])
     .index("by_shouldDelete", ["shouldDelete"])
     .index("by_fileId", ["fileId"]),
 
   favorites: defineTable({
     fileId: v.id("files"),
-    orgId: v.string(),
     userId: v.id("users"),
-  }).index("by_userId_orgId_fileId", ["userId", "orgId", "fileId"]),
+  }).index("by_userId_fileId", ["userId", "fileId"]),
 
   users: defineTable({
     tokenIdentifier: v.string(),
     name: v.optional(v.string()),
     image: v.optional(v.string()),
-    orgIds: v.array(
-      v.object({
-        orgId: v.string(),
-        role: roles,
-      })
-    ),
+    role: v.optional(roles),
   }).index("by_tokenIdentifier", ["tokenIdentifier"]),
 
   folders: defineTable({
     userId: v.id("users"),
     name: v.string(),
-    orgId: v.string(),
     parentId: v.optional(v.id("folders")),
     files: v.array(v.id("_storage")),
     folders: v.array(v.id("folders")),
     shouldDelete: v.optional(v.boolean()),
   })
-    .index("by_userId_orgId", ["userId", "orgId"])
-    .index("by_orgId", ["orgId"])
+    .index("by_userId", ["userId"])
     .index("by_name", ["name"])
     .index("by_shouldDelete", ["shouldDelete"]),
 });

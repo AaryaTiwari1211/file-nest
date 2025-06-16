@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import {
   Form,
   FormControl,
@@ -35,8 +34,6 @@ const formSchema = z.object({
 
 export function AddFolderButton() {
   const { toast } = useToast();
-  const organization = useOrganization();
-  const user = useUser();
   const createFolder = useMutation(api.folders.createFolder);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,16 +44,9 @@ export function AddFolderButton() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    let orgId: string | undefined = undefined;
-    if (organization.isLoaded && user.isLoaded) {
-      orgId = organization.organization?.id ?? user.user?.id;
-    }
-    if (!orgId) return;
-
     try {
       await createFolder({
         name: values.name,
-        orgId,
         parentId: undefined,
       });
 
@@ -95,7 +85,7 @@ export function AddFolderButton() {
         <DialogHeader>
           <DialogTitle className="mb-8">Create a New Folder</DialogTitle>
           <DialogDescription>
-            This folder will be accessible by anyone in your organization
+            This folder will be accessible by anyone.
           </DialogDescription>
         </DialogHeader>
 

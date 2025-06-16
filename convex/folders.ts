@@ -1,7 +1,6 @@
 import { useMutation } from "convex/react";
 import { ConvexError, v } from "convex/values";
 import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
-import { hasAccessToOrg } from "./files";
 import { Id } from "./_generated/dataModel";
 import exp from "constants";
 import { Doc } from "./_generated/dataModel";
@@ -9,21 +8,31 @@ import { Doc } from "./_generated/dataModel";
 export const createFolder = mutation({
   args: {
     name: v.string(),
-    orgId: v.string(),
     parentId: v.optional(v.id("folders")),
   },
   async handler(ctx, args) {
-    const user = await hasAccessToOrg(ctx, args.orgId);
-    if (!user) {
-      throw new ConvexError("You do not have access to this organization");
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("You must be logged in to create a folder");
     }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .first();
+
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
     await ctx.db.insert("folders", {
       name: args.name,
-      userId: user.user._id,
-      orgId: args.orgId,
       parentId: args.parentId,
       files: [],
       folders: [],
+      userId: user._id,
     });
   },
 });
@@ -31,19 +40,10 @@ export const createFolder = mutation({
 export const getFolders = query({
   args: {
     query: v.optional(v.string()),
-    orgId: v.string(),
     parentId: v.optional(v.id("folders")),
   },
   async handler(ctx, args) {
-    const user = await hasAccessToOrg(ctx, args.orgId);
-    if (!user) {
-      throw new ConvexError("You do not have access to this organization");
-    }
-
-    let folders = await ctx.db
-      .query("folders")
-      .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
-      .collect();
+    let folders = await ctx.db.query("folders").collect();
 
     if (args.query) {
       const queryLower = args.query.toLowerCase();
@@ -78,14 +78,8 @@ export const deleteFolder = mutation({
 });
 
 export const deleteAllFolders = mutation({
-  args: {
-    orgId: v.string(),
-  },
-  async handler(ctx, args) {
-    const folders = await ctx.db
-      .query("folders")
-      .withIndex("by_shouldDelete", (q) => q.eq("shouldDelete", true))
-      .collect();
+  async handler(ctx) {
+    const folders = await ctx.db.query("folders").collect();
     for (const folder of folders) {
       await Promise.all(
         folder.files.map(async (file) => {
@@ -99,7 +93,7 @@ export const deleteAllFolders = mutation({
           }
         })
       );
-      return await ctx.db.delete(folder._id);
+      await ctx.db.delete(folder._id);
     }
   },
 });
@@ -116,7 +110,7 @@ export const restoreFolder = mutation({
     folder.shouldDelete = false;
     await ctx.db.patch(args.folderId, folder);
   },
-})
+});
 
 export const uploadFileInFolder = mutation({
   args: {
@@ -208,20 +202,3 @@ export const getFilesByIds = query({
     return files;
   },
 });
-
-// export const uploadFileInFolder = mutation({
-//   args: {
-//     folderId: v.id("folders"),
-//     fileId: v.id("_storage"),
-//   },
-//   async handler(ctx, args) {
-//     const folder = await ctx.db.
-//     query("folders")
-//     .withIndex("by_id", (q) =>
-//     if (!folder) {
-//       throw new ConvexError("Folder not found");
-//     }
-//     folder.files.push(args.fileId);
-//     await ctx.db.update("folders", args.folderId, folder);
-//   },
-// });
