@@ -53,10 +53,10 @@ export function FileCard({
       <CardFooter className="flex justify-between xl:flex-nowrap xl:gap-0 lg:flex-wrap sm:gap-3 sm:flex-wrap">
         <div className="flex gap-2 text-xs text-gray-700 w-40 items-center">
           <Avatar className="w-6 h-6">
-            <AvatarImage src={userProfile?.image} />
+            <AvatarImage src={userProfile?.image || "/default-avatar.png"} />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-          {userProfile?.name}
+          {userProfile?.name || "Unknown User"}
         </div>
         <div className="text-xs text-gray-700">
           Uploaded on {formatRelative(new Date(file._creationTime), new Date())}

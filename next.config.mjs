@@ -3,7 +3,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        hostname: "moonlit-butterfly-303.convex.cloud",
+        hostname: "grateful-ferret-485.convex.cloud",
       },
     ],
   },
