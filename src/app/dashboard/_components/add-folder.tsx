@@ -20,12 +20,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
@@ -33,7 +32,6 @@ const formSchema = z.object({
 });
 
 export function AddFolderButton() {
-  const { toast } = useToast();
   const createFolder = useMutation(api.folders.createFolder);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,17 +52,9 @@ export function AddFolderButton() {
 
       setIsDialogOpen(false);
 
-      toast({
-        variant: "success",
-        title: "Folder Created",
-        description: "Your new folder has been created successfully",
-      });
+      toast.success("Your new folder has been created successfully");
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong",
-        description: "Your folder could not be created, try again later",
-      });
+      toast.error("Your folder could not be created, try again later");
     }
   }
 

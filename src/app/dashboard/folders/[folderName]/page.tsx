@@ -3,38 +3,32 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { FolderCard } from "../../_components/folder-card";
 import { FileCard } from "../../_components/file-card";
 import { Doc, Id } from "../../../../../convex/_generated/dataModel";
 import { Placeholder } from "../../_components/file-browser";
-import { Upload } from "lucide-react";
 import { UploadButton } from "../../_components/upload-button";
 import { AddFolderButton } from "../../_components/add-folder";
+import { use } from "react";
+import React from "react";
 
-const FolderPage = ({
-  params,
-}: {
-  params: {
-    folderName: string;
-  };
+const FolderPage = ({ params }: {
+  params: Promise<{ folderName: string }>;
 }) => {
+  const { folderName } = use(params);
   const router = useRouter();
   const folder = useQuery(api.folders.getFolderByName, {
-    folderName: params.folderName as string,
+    folderName: folderName as string,
   });
 
-  const filesQuery = useQuery(api.folders.getFilesByIds, {
-    fileIds: folder ? folder.files : [],
+  const filesQuery = useQuery(api.folders.getFilesInFolder, {
+    folderId: folder?._id as Id<"folders">,
   });
 
   if (!folder || !filesQuery) {
     return <div>Loading...</div>;
   }
 
-  const files = filesQuery as (Doc<"files"> & {
-    isFavorited: boolean;
-    url: string | null;
-  })[];
+  const files = filesQuery as Doc<"files">[];
 
   return (
     <div className="flex flex-col gap-24">

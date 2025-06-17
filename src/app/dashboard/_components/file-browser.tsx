@@ -40,15 +40,9 @@ export function Placeholder() {
 }
 
 export function FileBrowser({
-  title,
-  favoritesOnly,
-  deletedOnly,
-  foldersOnly,
+  title
 }: {
   title: string;
-  favoritesOnly?: boolean;
-  deletedOnly?: boolean;
-  foldersOnly?: boolean;
 }) {
   const user = useUser();
   useEffect(() => {
@@ -63,18 +57,12 @@ export function FileBrowser({
 
   const userId = user.user?.id;
 
-  const favorites = useQuery(
-    api.files.getAllFavorites,
-  );
-
   const files = useQuery(
     api.files.getFiles,
     userId
       ? {
           type: type === "all" ? undefined : type,
-          query,
-          favorites: favoritesOnly,
-          deletedOnly,
+          query
         }
       : "skip"
   );
@@ -84,16 +72,7 @@ export function FileBrowser({
   );
 
   const isLoading = files === undefined;
-
-  const modifiedFiles =
-    files
-      ?.filter((file) => file.folderId === undefined && file.userId !== "skip")
-      .map((file) => ({
-        ...file,
-        isFavorited: (favorites ?? []).some(
-          (favorite) => favorite.fileId === file._id
-        ),
-      })) ?? [];
+  const [foldersOnly, setFoldersOnly] = useState(false);
 
   return (
     <div>
@@ -138,6 +117,29 @@ export function FileBrowser({
               </SelectContent>
             </Select>
           </div>
+          <div className="flex gap-2 items-center">
+            <Label htmlFor="view-select">View</Label>
+            <Select
+              value={foldersOnly ? "folders" : "files"}
+              onValueChange={(newView) => {
+                setType("all");
+                setQuery("");
+                if (newView === "folders") {
+                  setFoldersOnly(true);
+                } else {
+                  setFoldersOnly(false);
+                }
+              }}
+            >
+              <SelectTrigger id="view-select" className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="files">Files</SelectItem>
+                <SelectItem value="folders">Folders</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {isLoading && (
@@ -155,19 +157,12 @@ export function FileBrowser({
               })
             ) : (
               <>
-                {folders?.map((folder) => {
-                  return <FolderCard key={folder._id} folder={folder} />;
-                })}
-
-                {modifiedFiles?.map((file) => {
-                  return <FileCard key={file._id} file={file} />;
+                {files?.map((file) => {
+                  return <FileCard key={file._id} file={{ ...file, url: file.url || "" }} />;
                 })}
               </>
             )}
           </div>
-        </TabsContent>
-        <TabsContent value="table">
-          <DataTable columns={columns} data={modifiedFiles} />
         </TabsContent>
       </Tabs>
 

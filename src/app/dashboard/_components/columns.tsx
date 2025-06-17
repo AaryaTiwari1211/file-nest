@@ -16,7 +16,7 @@ function UserCell({ userId }: { userId: Id<"users"> }) {
   return (
     <div className="flex gap-2 text-xs text-gray-700 w-40 items-center">
       <Avatar className="w-6 h-6">
-        <AvatarImage src={userProfile?.image} />
+        <AvatarImage src={userProfile?.image || ""} />
         <AvatarFallback>CN</AvatarFallback>
       </Avatar>
       {userProfile?.name}
@@ -24,10 +24,7 @@ function UserCell({ userId }: { userId: Id<"users"> }) {
   );
 }
 
-// Update type definition to include isFavorited and url
-export const columns: ColumnDef<
-  Doc<"files"> & { url: string | null; isFavorited: boolean }
->[] = [
+export const columns: ColumnDef<Doc<"files">>[] = [
   {
     accessorKey: "name",
     header: "Name",

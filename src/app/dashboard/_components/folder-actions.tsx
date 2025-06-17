@@ -1,16 +1,12 @@
-import { Doc, Id } from "../../../../convex/_generated/dataModel";
+import { Doc } from "../../../../convex/_generated/dataModel";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  FileIcon,
   MoreVertical,
-  StarHalf,
-  StarIcon,
   TrashIcon,
   UndoIcon,
 } from "lucide-react";
@@ -27,20 +23,16 @@ import {
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { useToast } from "@/components/ui/use-toast";
-import { Protect } from "@clerk/nextjs";
+import { toast } from "sonner";
 
 export function FolderCardActions({
   folder
 }: {
-  folder: Doc<"folders"> & { url: string | null };
+  folder: Doc<"folders">
 }) {
-    
-  const { toast } = useToast();
   const me = useQuery(api.users.getMe);
   const deleteFolder = useMutation(api.folders.deleteFolder);
   const restoreFolder = useMutation(api.folders.restoreFolder);
-
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -62,9 +54,7 @@ export function FolderCardActions({
                 await deleteFolder({
                   folderId: folder._id,
                 });
-                toast({
-                  variant: "default",
-                  title: "Folder marked for deletion",
+                toast.message("Folder marked for deletion", {
                   description: "Your folder will be deleted soon",
                 });
               }}
@@ -80,27 +70,6 @@ export function FolderCardActions({
           <MoreVertical />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem
-            onClick={() => {
-              if (!folder.url) return;
-              window.open(folder.url, "_blank");
-            }}
-            className="flex gap-1 items-center cursor-pointer"
-          >
-            <FileIcon className="w-4 h-4" /> Download
-          </DropdownMenuItem>
-
-          <Protect
-            condition={(check) => {
-              return (
-                check({
-                  role: "org:admin",
-                }) || folder.userId === me?._id
-              );
-            }}
-            fallback={<></>}
-          >
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
                 if (folder.shouldDelete) {
@@ -123,7 +92,6 @@ export function FolderCardActions({
                 </div>
               )}
             </DropdownMenuItem>
-          </Protect>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

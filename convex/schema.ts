@@ -1,9 +1,9 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-// Define enums
-export const fileTypes = v.union(v.literal("image"), v.literal("csv"), v.literal("pdf"));
-export const roles = v.union(v.literal("admin"), v.literal("member"));
+export const fileTypes = v.union(v.literal("image"), v.literal("csv"), v.literal("pdf"), v.literal("video"), v.literal("text"));
+export const roles = v.union(v.literal("admin"), v.literal("member"), v.literal("super-admin"));
+export const approvalRequestTypes = v.union(v.literal("addition"), v.literal("deletion"));
 
 export default defineSchema({
   users: defineTable({
@@ -13,39 +13,91 @@ export default defineSchema({
     image: v.optional(v.string()),
     role: v.optional(roles),
     createdAt: v.number(),
-  }).index("by_tokenIdentifier", ["tokenIdentifier"]),
+    lastLoginAt: v.optional(v.number()),
+    status: v.optional(v.string()),
+    permissions: v.optional(v.array(v.string())),
+    tenantId: v.optional(v.string()),
+  }).index("by_tokenIdentifier", ["tokenIdentifier"]).index("by_email", ["email"]).index("by_status", ["status"]),
 
   folders: defineTable({
-    userId: v.id("users"),
+    userId: v.id("users"), 
+    tenantId: v.optional(v.string()),
     name: v.string(),
     nameLower: v.string(),
     parentId: v.optional(v.id("folders")),
     isRoot: v.optional(v.boolean()),
     shouldDelete: v.optional(v.boolean()),
+    accessControl: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
     createdAt: v.number(),
+    lastModifiedAt: v.optional(v.number()),
   })
     .index("by_userId_parentId", ["userId", "parentId"])
     .index("by_nameLower", ["nameLower"])
-    .index("by_shouldDelete", ["shouldDelete"]),
+    .index("by_shouldDelete", ["shouldDelete"])
+    .index("by_tenantId", ["tenantId"]),
 
   files: defineTable({
     name: v.string(),
     nameLower: v.string(),
     type: fileTypes,
+    url: v.string(),
+    isFavorited: v.boolean(),
     fileId: v.id("_storage"),
     folderId: v.optional(v.id("folders")),
     userId: v.id("users"),
+    tenantId: v.optional(v.string()),
     size: v.optional(v.number()),
     shouldDelete: v.optional(v.boolean()),
     createdAt: v.number(),
+    lastModifiedAt: v.optional(v.number()),
+    status: v.optional(v.string()),
+    accessLogs: v.optional(v.array(v.object({ userId: v.id("users"), accessedAt: v.number() }))),
+    encryptionKey: v.optional(v.string()),
+    checksum: v.optional(v.string()),
+    versionHistory: v.optional(v.array(v.object({ version: v.number(), modifiedAt: v.number() }))),
+    tags: v.optional(v.array(v.string())),
   })
     .index("by_fileId", ["fileId"])
     .index("by_userId_folderId", ["userId", "folderId"])
-    .index("by_shouldDelete", ["shouldDelete"]),
+    .index("by_shouldDelete", ["shouldDelete"])
+    .index("by_tenantId", ["tenantId"])
+    .index("by_folderId", ["folderId"]),
+
+  approvals: defineTable({
+    fileId: v.id("files"),
+    approvedBy: v.id("users"),
+    approvedAt: v.number(),
+    status: v.string(),
+    remarks: v.optional(v.string()),
+    adminSignature: v.optional(v.string()),
+    type: approvalRequestTypes,
+    description: v.optional(v.string()),
+  }).index("by_approvedBy", ["approvedBy"])
+    .index("by_status", ["status"])
+    .index("by_fileId", ["fileId"]),
+
+  auditLogs: defineTable({
+    userId: v.id("users"),
+    tenantId: v.optional(v.string()),
+    action: v.string(),
+    targetId: v.optional(v.id("files")),
+    timestamp: v.number(),
+    ipAddress: v.optional(v.string()),
+    deviceMetadata: v.optional(v.string()),
+  }).index("by_userId", ["userId"]).index("by_tenantId", ["tenantId"]),
 
   favorites: defineTable({
     fileId: v.id("files"),
     userId: v.id("users"),
     createdAt: v.number(),
   }).index("by_userId_fileId", ["userId", "fileId"]),
+
+  searchIndex: defineTable({
+    entityId: v.id("files"),
+    entityType: v.string(),
+    tenantId: v.optional(v.string()),
+    keywords: v.array(v.string()),
+    metadata: v.optional(v.object({ key: v.string(), value: v.string() })), 
+  }).index("by_entityType", ["entityType"]).index("by_tenantId", ["tenantId"]),
 });

@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: "https://true-coyote-81.clerk.accounts.dev",
+      domain: process.env.NEXT_PUBLIC_CLERK_DOMAIN,
       applicationID: "convex",
     },
   ],

@@ -21,16 +21,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import { z } from "zod";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Doc } from "../../../../convex/_generated/dataModel";
 import { usePathname } from "next/navigation";
+import { AdditionRequestModal } from "./modals/addition-request";
 
 const formSchema = z.object({
   title: z.string().min(1).max(200),
@@ -55,9 +54,6 @@ export function UploadButton() {
     }
   }, [folder]);
 
-  const { toast } = useToast();
-  const organization = useOrganization();
-  const user = useUser();
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -108,17 +104,9 @@ export function UploadButton() {
 
       setIsFileDialogOpen(false);
 
-      toast({
-        variant: "success",
-        title: "File Uploaded",
-        description: "Now everyone can view your file",
-      });
+      toast.success("File Uploaded");
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong",
-        description: "Your file could not be uploaded, try again later",
-      });
+      toast.error("Something went wrong");
     }
   }
 
@@ -127,72 +115,24 @@ export function UploadButton() {
   const createFile = useMutation(api.files.createFile);
 
   return (
-    <Dialog
+    <AdditionRequestModal
       open={isFileDialogOpen}
-      onOpenChange={(isOpen) => {
-        setIsFileDialogOpen(isOpen);
-        form.reset();
+      onOpenChange={setIsFileDialogOpen}
+      onSubmit={async (data) => {
+        await onSubmit({
+          title: data.description,
+          file: data.file instanceof FileList
+            ? data.file
+            : data.file instanceof File
+            ? (() => {
+                const dt = new DataTransfer();
+                dt.items.add(data.file);
+                return dt.files;
+              })()
+            : new FileList(),
+        });
       }}
-    >
-      <DialogTrigger asChild>
-        <Button>Upload File</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="mb-8">Upload your File Here</DialogTitle>
-          <DialogDescription>
-            This file will be accessible by anyone in your organization
-          </DialogDescription>
-        </DialogHeader>
-
-        <div>
-          {folder === undefined ? (
-            <div>Loading...</div>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="file"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>File</FormLabel>
-                      <FormControl>
-                        <Input type="file" {...fileRef} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  className="flex gap-1"
-                >
-                  {form.formState.isSubmitting && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  )}
-                  Submit
-                </Button>
-              </form>
-            </Form>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      loading={form.formState.isSubmitting}
+    />
   );
 }

@@ -17,10 +17,9 @@ export default function SignUpPage() {
     <div className="flex justify-center items-center my-10">
       <div className="flex max-w-[1200px] items-center justify-center mt-12 gap-10">
         <SignUp
-          routing="path"
-          path="/sign-up"
-          redirectUrl="/dashboard/files"
-          signInUrl="/sign-in"
+          unsafeMetadata={{
+            role: "member"
+          }}
         />
         <div>
           <Image

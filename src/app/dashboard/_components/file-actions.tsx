@@ -1,19 +1,9 @@
-import { Doc, Id } from "../../../../convex/_generated/dataModel";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  FileIcon,
-  MoreVertical,
-  StarHalf,
-  StarIcon,
-  TrashIcon,
-  UndoIcon,
-} from "lucide-react";
+import { useState } from "react";
+import { api } from "../../../../convex/_generated/api";
+import { Doc } from "../../../../convex/_generated/dataModel";
+import { useQuery , useMutation } from "convex/react";
+import { toast } from "sonner";
+import { FileIcon, TrashIcon, UndoIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,11 +14,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import { useToast } from "@/components/ui/use-toast";
-import { Protect } from "@clerk/nextjs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger , DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { DeletionRequestModal } from "@/app/dashboard/_components/modals/deletion-request"; // Update the import path
 
 export function FileCardActions({
   file,
@@ -39,45 +27,29 @@ export function FileCardActions({
 }) {
   const deleteFile = useMutation(api.files.deleteFile);
   const restoreFile = useMutation(api.files.restoreFile);
-  const toggleFavorite = useMutation(api.files.toggleFavorite);
-  const { toast } = useToast();
   const me = useQuery(api.users.getMe);
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
 
   return (
     <>
-      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action will mark the file for our deletion process. Files are
-              deleted periodically
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                await deleteFile({
-                  fileId: file._id,
-                });
-                toast({
-                  variant: "default",
-                  title: "File marked for deletion",
-                  description: "Your file will be deleted soon",
-                });
-              }}
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* DeletionRequestModal */}
+      <DeletionRequestModal
+        open={isDeletionModalOpen}
+        onOpenChange={setIsDeletionModalOpen}
+        onSubmit={async (reason: string) => {
+          await deleteFile({
+            fileId: file._id,
+          });
+          toast("Your file will be deleted soon");
+          setIsDeletionModalOpen(false);
+        }}
+        file={file}
+      />
 
       <DropdownMenu>
-        <DropdownMenuTrigger> 
+        <DropdownMenuTrigger>
           <MoreVertical />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -90,36 +62,6 @@ export function FileCardActions({
           >
             <FileIcon className="w-4 h-4" /> Download
           </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => {
-              toggleFavorite({
-                fileId: file._id,
-              });
-            }}
-            className="flex gap-1 items-center cursor-pointer"
-          >
-            {isFavorited ? (
-              <div className="flex gap-1 items-center">
-                <StarIcon className="w-4 h-4" /> Unfavorite
-              </div>
-            ) : (
-              <div className="flex gap-1 items-center">
-                <StarHalf className="w-4 h-4" /> Favorite
-              </div>
-            )}
-          </DropdownMenuItem>
-
-          <Protect
-            condition={(check) => {
-              return (
-                check({
-                  role: "org:admin",
-                }) || file.userId === me?._id
-              );
-            }}
-            fallback={<></>}
-          >
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
@@ -128,7 +70,7 @@ export function FileCardActions({
                     fileId: file._id,
                   });
                 } else {
-                  setIsConfirmOpen(true);
+                  setIsDeletionModalOpen(true); // Open the DeletionRequestModal
                 }
               }}
               className="flex gap-1 items-center cursor-pointer"
@@ -143,7 +85,6 @@ export function FileCardActions({
                 </div>
               )}
             </DropdownMenuItem>
-          </Protect>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

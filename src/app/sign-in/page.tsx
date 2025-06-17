@@ -24,11 +24,7 @@ export default function SignInPage() {
             alt="file drive logo"
           />
         </div>
-        <SignIn
-          routing="path"
-          path="/sign-in"
-          signUpUrl="/sign-up"
-        />
+        <SignIn/>
       </div>
     </div>
   );

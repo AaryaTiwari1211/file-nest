@@ -19,7 +19,7 @@ import { FileCardActions } from "./file-actions";
 export function FileCard({
   file,
 }: {
-  file: Doc<"files"> & { isFavorited: boolean; url: string | null };
+  file: Doc<"files">
 }) {
   const userProfile = useQuery(api.users.getUserProfile, {
     userId: file.userId,
@@ -39,7 +39,7 @@ export function FileCard({
           {file.name}
         </CardTitle>
         <div className="absolute top-2 right-2">
-          <FileCardActions isFavorited={file.isFavorited} file={file} />
+          <FileCardActions file={file} isFavorited={false} />
         </div>
       </CardHeader>
       <CardContent className="h-[200px] flex justify-center items-center">
