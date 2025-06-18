@@ -46,10 +46,36 @@ export const createFile = mutation({
       userId: user._id,
       tenantId: args.tenantId ?? "default",
       size: args.size ?? 0,
+      isApproved: false,
       createdAt: Date.now(),
       shouldDelete: false,
       status: "pending",
     });
+    return await ctx.db
+      .query("files")
+      .withIndex("by_fileId", (q) => q.eq("fileId", args.fileId))
+      .first();
+  },
+});
+
+export const getFileByName = query({
+  args: { name: v.string() },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .first();
+    if (!user) return null;
+
+  return await ctx.db
+    .query("files")
+    .withIndex("by_nameLower", q => q.eq("nameLower", args.name.toLowerCase()))
+    .first();
   },
 });
 
@@ -197,9 +223,8 @@ export const approveFile = mutation({
 });
 
 export const getFileById = query({
-  args: { fileId: v.id("_storage") },
+  args: { id: v.id("files") },
   async handler(ctx, args) {
-    return await ctx.db.query("files").withIndex("by_fileId", (q) =>
-      q.eq("fileId", args.fileId)).first();
+    return await ctx.db.get(args.id);
   },
 });

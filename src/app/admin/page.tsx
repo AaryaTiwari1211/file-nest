@@ -1,11 +1,16 @@
 "use client";
+import { useEffect, useState } from "react";
 import { ChartAreaInteractive } from "./_components/chart-area-interactive"
-import { DataTable } from "./_components/data-table"
+import ApprovalTable from "./_components/data-table";
 import { SectionCards } from "./_components/section-cards"
-import data from "./data.json"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 export default function Page() {
+    const approvals = useQuery(api.approvals.getAllApprovals);
+    const acceptedApprovals = useQuery(api.approvals.getAcceptedApprovals);
+    const rejectedApprovals = useQuery(api.approvals.getRejectedApprovals);
+    const pendingApprovals = useQuery(api.approvals.getPendingApprovals);
     return (
         <Tabs defaultValue="overview" className="w-full p-2">
             <div className="@container/main flex flex-1 flex-col gap-2">
@@ -23,7 +28,52 @@ export default function Page() {
                 </TabsContent>
                 <TabsContent value="approvals">
                     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                        <DataTable data={data} />
+                        <ApprovalTable
+                            allData={
+                                approvals
+                                    ? approvals.map(a => ({
+                                        status: a.status ?? "No Status",
+                                        approvedBy: typeof a.approvedBy === "string" ? a.approvedBy : "No Approval",
+                                        requestedBy: a.requestedBy?.name ?? "Unknown",
+                                        fileName: a.fileName ?? "",
+                                        remarks: a.remarks
+                                    }))
+                                    : []
+                            }
+                            pendingData={
+                                pendingApprovals
+                                    ? pendingApprovals.map(a => ({
+                                        status: a.status ?? "No Status",
+                                        approvedBy: typeof a.approvedBy === "string" ? a.approvedBy : "No Approval",
+                                        requestedBy: a.requestedBy?.name ?? "Unknown",
+                                        fileName: a.fileName ?? "",
+                                        remarks: a.remarks
+                                    }))
+                                    : []
+                            }
+                            acceptedData={
+                                acceptedApprovals
+                                    ? acceptedApprovals.map(a => ({
+                                        status: a.status ?? "No Status",
+                                        approvedBy: typeof a.approvedBy === "string" ? a.approvedBy : "No Approval",
+                                        requestedBy: a.requestedBy?.name ?? "Unknown",
+                                        fileName: a.fileName ?? "",
+                                        remarks: a.remarks
+                                    }))
+                                    : []
+                            }
+                            rejectedData={
+                                rejectedApprovals
+                                    ? rejectedApprovals.map(a => ({
+                                        status: a.status ?? "No Status",
+                                        approvedBy: typeof a.approvedBy === "string" ? a.approvedBy : "No Approval",
+                                        requestedBy: a.requestedBy?.name ?? "Unknown",
+                                        fileName: a.fileName ?? "",
+                                        remarks: a.remarks
+                                    }))
+                                    : []
+                            }
+                        />
                     </div>
                 </TabsContent>
             </div>

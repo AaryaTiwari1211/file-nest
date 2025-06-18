@@ -7,6 +7,17 @@ import {
 } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 
+export async function getUserById(
+  ctx: QueryCtx | MutationCtx,
+  userId: string
+): Promise<Doc<"users">> {
+  const doc = await ctx.db.get(userId as any);
+  if (!doc || doc === null || (doc as any).tokenIdentifier === undefined) {
+    throw new ConvexError("User not found.");
+  }
+  return doc as Doc<"users">;
+}
+
 export async function getUser(
   ctx: QueryCtx | MutationCtx,
   tokenIdentifier: string

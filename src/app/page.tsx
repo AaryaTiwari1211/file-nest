@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
+
 export default function LandingPage() {
   const user = useUser();
   return (

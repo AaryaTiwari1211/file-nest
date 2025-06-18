@@ -1,0 +1,28 @@
+import { Doc } from "../../../convex/_generated/dataModel";
+
+export const fileTypes = {
+    "image/png": "image",
+    "image/jpeg": "image",
+    "image/jpg": "image",
+    "image/gif": "image",
+    "image/webp": "image",
+    "application/pdf": "pdf",
+    "text/csv": "csv",
+    "video/mp4": "video",
+    "video/mpeg": "video",
+    "text/plain": "text",
+    "application/msword": "doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.ms-powerpoint": "ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+    "application/zip": "zip",
+    "application/x-rar-compressed": "rar",
+    "audio/mpeg": "audio",
+    "audio/wav": "audio",
+    "application/json": "json",
+    "application/xml": "xml",
+    "text/html": "html",
+    "text/markdown": "md",
+} as Record<string, Doc<"files">["type"]>;

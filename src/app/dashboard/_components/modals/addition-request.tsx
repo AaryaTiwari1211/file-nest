@@ -49,9 +49,9 @@ export function AdditionRequestModal({
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="mb-8">Upload your File Here</DialogTitle>
+                    <DialogTitle className="mb-8">File Upload Request</DialogTitle>
                     <DialogDescription>
-                        This file will be accessible by anyone in your organization
+                        This file will be accessible by anyone in your organization once approved
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
@@ -74,11 +74,11 @@ export function AdditionRequestModal({
                     </div>
                     <div>
                         <label htmlFor="description" className="block mb-1 font-medium">
-                            Description
+                            Title
                         </label>
-                        <Textarea
+                        <Input
                             id="description"
-                            placeholder="Describe why you want to upload this file..."
+                            placeholder="Title of the file...."
                             {...form.register("description", { required: true })}
                         />
                         {form.formState.errors.description && (

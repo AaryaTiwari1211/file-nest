@@ -1,7 +1,27 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-export const fileTypes = v.union(v.literal("image"), v.literal("csv"), v.literal("pdf"), v.literal("video"), v.literal("text"));
+export const fileTypes = v.union(
+  v.literal("image"),
+  v.literal("csv"),
+  v.literal("pdf"),
+  v.literal("video"),
+  v.literal("text"),
+  v.literal("doc"),
+  v.literal("docx"),
+  v.literal("xls"),
+  v.literal("xlsx"),
+  v.literal("ppt"),
+  v.literal("pptx"),
+  v.literal("zip"),
+  v.literal("rar"),
+  v.literal("audio"),
+  v.literal("json"),
+  v.literal("xml"),
+  v.literal("html"),
+  v.literal("md"),
+  v.literal("other")
+);
 export const roles = v.union(v.literal("admin"), v.literal("member"), v.literal("super-admin"));
 export const approvalRequestTypes = v.union(v.literal("addition"), v.literal("deletion"));
 
@@ -41,6 +61,7 @@ export default defineSchema({
     name: v.string(),
     nameLower: v.string(),
     type: fileTypes,
+    isApproved: v.optional(v.boolean()),
     url: v.string(),
     isFavorited: v.boolean(),
     fileId: v.id("_storage"),
@@ -62,12 +83,19 @@ export default defineSchema({
     .index("by_userId_folderId", ["userId", "folderId"])
     .index("by_shouldDelete", ["shouldDelete"])
     .index("by_tenantId", ["tenantId"])
-    .index("by_folderId", ["folderId"]),
+    .index("by_folderId", ["folderId"])
+    .index("by_nameLower", ["nameLower"]),
 
   approvals: defineTable({
     fileId: v.id("files"),
-    approvedBy: v.id("users"),
-    approvedAt: v.number(),
+    fileName: v.string(),
+    approvedBy: v.optional(v.id("users")),
+    requestedBy: v.object({
+      id: v.id("users"),
+      name: v.string(),
+    }),
+    requestedAt: v.string(),
+    approvedAt: v.optional(v.string()),
     status: v.string(),
     remarks: v.optional(v.string()),
     adminSignature: v.optional(v.string()),

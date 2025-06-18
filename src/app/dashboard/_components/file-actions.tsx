@@ -1,35 +1,23 @@
 import { useState } from "react";
 import { api } from "../../../../convex/_generated/api";
 import { Doc } from "../../../../convex/_generated/dataModel";
-import { useQuery , useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { toast } from "sonner";
 import { FileIcon, TrashIcon, UndoIcon } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger , DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { DeletionRequestModal } from "@/app/dashboard/_components/modals/deletion-request"; // Update the import path
 
 export function FileCardActions({
   file,
-  isFavorited,
 }: {
   file: Doc<"files"> & { url: string | null };
   isFavorited: boolean;
 }) {
   const deleteFile = useMutation(api.files.deleteFile);
   const restoreFile = useMutation(api.files.restoreFile);
-  const me = useQuery(api.users.getMe);
+  const createApprovalRequest = useMutation(api.approvals.createApprovalRequest);
 
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
 
   return (
@@ -39,9 +27,13 @@ export function FileCardActions({
         open={isDeletionModalOpen}
         onOpenChange={setIsDeletionModalOpen}
         onSubmit={async (reason: string) => {
-          await deleteFile({
+          await createApprovalRequest({
             fileId: file._id,
-          });
+            fileName: file.name,
+            description: reason,
+            type: "deletion",
+            userId: file.userId,
+          })
           toast("Your file will be deleted soon");
           setIsDeletionModalOpen(false);
         }}

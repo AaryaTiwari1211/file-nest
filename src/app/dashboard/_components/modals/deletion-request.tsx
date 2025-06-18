@@ -52,7 +52,7 @@ export function DeletionRequestModal({
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-8">
-                    <div>
+                    <div className="space-y-2">
                         <Label htmlFor="deletion-reason">Reason for Deletion</Label>
                         <Textarea
                             id="deletion-reason"

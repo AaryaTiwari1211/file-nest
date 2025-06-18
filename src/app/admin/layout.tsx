@@ -7,8 +7,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className="relative w-full h-full m-0 p-0">
-            <body>
+        <div className="relative w-full h-full m-0 p-0">
+            <div>
                 <SidebarProvider>
                     <SidebarInset>
                         <div className="flex flex-1">
@@ -17,7 +17,7 @@ export default function RootLayout({
                         </div>
                     </SidebarInset>
                 </SidebarProvider>
-            </body>
-        </html>
+            </div>
+        </div>
     );
 }

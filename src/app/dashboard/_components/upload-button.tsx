@@ -2,34 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { Doc } from "../../../../convex/_generated/dataModel";
 import { usePathname } from "next/navigation";
 import { AdditionRequestModal } from "./modals/addition-request";
+import { mapMimeTypeToType } from "@/app/utils/mapMIMEtype";
 
 const formSchema = z.object({
   title: z.string().min(1).max(200),
@@ -39,20 +22,9 @@ const formSchema = z.object({
 });
 
 export function UploadButton() {
-  const path = usePathname();
-  const folderName = path.replace("/dashboard/folders/", "");
-  const uploadFileInFolder = useMutation(api.folders.uploadFileInFolder);
-  const folder = useQuery(api.folders.getFolderByName, {
-    folderName: folderName as string,
-  });
-  const [folderData, setFolderData] = useState<Doc<"folders"> | null>(null);
-
-  useEffect(() => {
-    if (folder !== undefined) {
-      setFolderData(folder);
-      console.log("Folder data:", folder);
-    }
-  }, [folder]);
+  const createApprovalRequest = useMutation(api.approvals.createApprovalRequest);
+  const createFile = useMutation(api.files.createFile);
+  const me = useQuery(api.users.getMe);
 
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
@@ -64,14 +36,9 @@ export function UploadButton() {
     },
   });
 
-  const fileRef = form.register("file");
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-
+  async function handleFormSubmit(values: z.infer<typeof formSchema>) {
     const postUrl = await generateUploadUrl();
-
     const fileType = values.file[0].type;
-
     const result = await fetch(postUrl, {
       method: "POST",
       headers: { "Content-Type": fileType },
@@ -79,59 +46,69 @@ export function UploadButton() {
     });
     const { storageId } = await result.json();
 
-    const types = {
-      "image/png": "image",
-      "application/pdf": "pdf",
-      "text/csv": "csv",
-    } as Record<string, Doc<"files">["type"]>;
-
     try {
-      await createFile({
+      if (!me) {
+        toast.error("You must be logged in to upload a file.");
+        return;
+      }
+
+      const createdFileRecord = await createFile({
         name: values.title,
         fileId: storageId,
-        type: types[fileType],
-        folderId: folderData?._id,
+        type: mapMimeTypeToType(values.file[0].type),
+        folderId: undefined,
+        size: values.file[0].size,
+        tenantId: me.tenantId,
       });
 
-      if (folderData) {
-        await uploadFileInFolder({
-          fileId: storageId,
-          folderId: folderData._id,
-        });
-        console.log("File uploaded in folder");
+      if (!createdFileRecord) {
+        toast.error("File not created.");
+        return;
       }
-      form.reset();
 
+      await createApprovalRequest({
+        fileId: createdFileRecord._id,
+        fileName:createdFileRecord.name,
+        description: values.title,
+        type: "addition",
+        userId: me._id,
+      });
+      
+      form.reset();
       setIsFileDialogOpen(false);
 
-      toast.success("File Uploaded");
+      toast.success("File Approval Request Created! Please wait while the admin approves your request");
     } catch (err) {
       toast.error("Something went wrong");
     }
   }
 
-  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  // Adapter to match AdditionRequestModal's expected signature
+  const onModalSubmit = async (data: { file: File | null; description: string }) => {
+    if (!data.file) {
+      toast.error("File is required.");
+      return;
+    }
+    await handleFormSubmit({
+      title: data.description,
+      file: {
+        0: data.file,
+        length: 1,
+        item: (index: number) => (index === 0 ? data.file : null),
+        [Symbol.iterator]: function* () {
+          yield data.file;
+        }
+      } as unknown as FileList,
+    });
+  };
 
-  const createFile = useMutation(api.files.createFile);
+  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
 
   return (
     <AdditionRequestModal
       open={isFileDialogOpen}
       onOpenChange={setIsFileDialogOpen}
-      onSubmit={async (data) => {
-        await onSubmit({
-          title: data.description,
-          file: data.file instanceof FileList
-            ? data.file
-            : data.file instanceof File
-            ? (() => {
-                const dt = new DataTransfer();
-                dt.items.add(data.file);
-                return dt.files;
-              })()
-            : new FileList(),
-        });
-      }}
+      onSubmit={onModalSubmit}
       loading={form.formState.isSubmitting}
     />
   );
